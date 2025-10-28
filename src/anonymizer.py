@@ -1,4 +1,5 @@
 import re
+from copy import deepcopy
 from .utils import decode_outputs
 
 class Anonymizer:
@@ -9,13 +10,30 @@ class Anonymizer:
             self.months = [m.strip() for m in f.readlines()]
         with open(self.config.path_to_written_numbers_file, "r") as f:
             self.written_numbers = [w.strip() for w in f.readlines()]
+        self.valid_surrounding_chars = [".", ",", ";", "!", ":", "\n", "?", "-"]
 
-    def anonymize(self, text_input):
+    def analyze(self, text_input):
         predictions = decode_outputs(self.classifier(text_input), model_type=self.config.model_type)
-        entities = {p["word"]: p["entity"] for p in predictions if p["entity"] != "NONE"}
+        entities = [p for p in predictions if p["entity"] != "NONE" and len(p["word"]) > 1 and p["word"].isalnum()]
+        return entities
+
+    def anonymize(self, input_seq, selected_entities=None):
+        raw_entities = self.analyze(input_seq)
+        entities = {p["word"]: p["entity"] for p in raw_entities}
         
-        # Simple replacement
-        for word, ent in entities.items():
-            text_input = text_input.replace(word, f"<{ent}>")
+        if selected_entities:
+            entities = {k: v for k, v in entities.items() if v in selected_entities}
+
+        # Generate Map
+        counts = {}
+        mapping = {}
+        for word, etype in entities.items():
+            if etype not in counts: counts[etype] = 1
+            mapping[word] = f"{etype}_{counts[etype]}"
+            counts[etype] += 1
             
-        return text_input
+        # Regex Replacement
+        for phrase, replacement in sorted(mapping.items(), key=lambda x: len(x[0]), reverse=True):
+             input_seq = re.sub(r'\b' + re.escape(phrase) + r'\b', replacement, input_seq)
+             
+        return input_seq
