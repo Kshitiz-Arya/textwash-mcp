@@ -27,3 +27,13 @@ def decode_outputs(predicted_labels, model_type="bert"):
             if elem["word"].startswith("Ġ"):
                 elem["word"] = elem["word"][1:]
     return entities
+
+def get_available_entities(model_path):
+    import os
+    import json
+    config_path = os.path.join(model_path, "config.json")
+    if not os.path.exists(config_path): return []
+    with open(config_path, "r") as f:
+        label_map = json.load(f)["id2label"]
+    available = sorted(list(set(label_map.values()) - {"NONE", "PAD", "O"}))
+    return available

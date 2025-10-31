@@ -3,6 +3,7 @@ from mcp.server.fastmcp import FastMCP
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 from .config import Config
 from .anonymizer import Anonymizer
+from .utils import get_available_entities
 
 mcp = FastMCP("Textwash Anonymizer")
 _MODEL_CACHE = {}
@@ -24,9 +25,15 @@ def get_anonymizer(language: str):
     return anonymizer
 
 @mcp.tool()
-def anonymize_text(text: str, language: str = "en") -> str:
+def list_supported_entity_types(language: str = "en") -> str:
+    config = Config(language=language)
+    entities = get_available_entities(config.path_to_model)
+    return ", ".join(entities)
+
+@mcp.tool()
+def anonymize_text(text: str, language: str = "en", restrict_to_entities: list[str] = None) -> str:
     anonymizer = get_anonymizer(language)
-    return anonymizer.anonymize(text)
+    return anonymizer.anonymize(text, selected_entities=restrict_to_entities)
 
 if __name__ == "__main__":
     mcp.run()
