@@ -14,26 +14,28 @@ class Anonymizer:
 
     def analyze(self, text_input):
         predictions = decode_outputs(self.classifier(text_input), model_type=self.config.model_type)
-        entities = [p for p in predictions if p["entity"] != "NONE" and len(p["word"]) > 1 and p["word"].isalnum()]
-        return entities
+        return [p for p in predictions if p["entity"] != "NONE" and len(p["word"]) > 1 and p["word"].isalnum()]
 
-    def anonymize(self, input_seq, selected_entities=None):
+    def anonymize(self, input_seq, selected_entities=None, strategy="standard", return_mapping=False):
         raw_entities = self.analyze(input_seq)
         entities = {p["word"]: p["entity"] for p in raw_entities}
         
         if selected_entities:
             entities = {k: v for k, v in entities.items() if v in selected_entities}
 
-        # Generate Map
         counts = {}
         mapping = {}
         for word, etype in entities.items():
-            if etype not in counts: counts[etype] = 1
-            mapping[word] = f"{etype}_{counts[etype]}"
-            counts[etype] += 1
+            if strategy == "redact":
+                mapping[word] = "[REDACTED]"
+            else:
+                if etype not in counts: counts[etype] = 1
+                mapping[word] = f"{etype}_{counts[etype]}"
+                counts[etype] += 1
             
-        # Regex Replacement
         for phrase, replacement in sorted(mapping.items(), key=lambda x: len(x[0]), reverse=True):
              input_seq = re.sub(r'\b' + re.escape(phrase) + r'\b', replacement, input_seq)
-             
+        
+        if return_mapping:
+            return input_seq, mapping
         return input_seq
