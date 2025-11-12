@@ -51,3 +51,10 @@ def anonymize_text(text: str, language: str = "en", restrict_to_entities: list[s
 
 if __name__ == "__main__":
     mcp.run()
+
+@mcp.tool()
+def anonymize_and_generate_key(text: str, language: str = "en") -> str:
+    import json
+    anonymizer = get_anonymizer(language)
+    text_out, mapping = anonymizer.anonymize(text, strategy="standard", return_mapping=True)
+    return json.dumps({"anonymized_text": text_out, "key": mapping}, indent=2)
