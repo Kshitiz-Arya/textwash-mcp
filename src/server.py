@@ -58,3 +58,20 @@ def anonymize_and_generate_key(text: str, language: str = "en") -> str:
     anonymizer = get_anonymizer(language)
     text_out, mapping = anonymizer.anonymize(text, strategy="standard", return_mapping=True)
     return json.dumps({"anonymized_text": text_out, "key": mapping}, indent=2)
+
+@mcp.tool()
+def anonymize_file(input_path: str, output_path: str, language: str = "en", mode: str = "standard") -> str:
+    import os
+    if not os.path.exists(input_path): return "Input file not found."
+    
+    with open(input_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    anonymizer = get_anonymizer(language)
+    result = anonymizer.anonymize(content, strategy=mode)
+    
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(result)
+        
+    return f"Processed {input_path} -> {output_path}"
