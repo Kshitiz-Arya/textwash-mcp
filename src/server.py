@@ -45,7 +45,7 @@ def analyze_pii(text: str, language: str = "en") -> str:
     return str([e["word"] + ": " + e["entity"] for e in entities])
 
 @mcp.tool()
-def anonymize_text(text: str, language: str = "en", restrict_to_entities: list[str] = None) -> str:
+def anonymize_text(text: str, language: str = "en", mode: str = "standard", restrict_to_entities: list[str] = None) -> str:
     anonymizer = get_anonymizer(language)
     return anonymizer.anonymize(text, selected_entities=restrict_to_entities)
 
