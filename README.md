@@ -38,13 +38,6 @@ A powerful Model Context Protocol (MCP) server that automatically detects and an
 pip install -r requirements.txt
 ```
 
-### Required Dependencies
-
-- `torch==1.9.0` - PyTorch for ML model operations
-- `transformers==4.28.1` - Hugging Face transformers library
-- `mcp[cli]` - Model Context Protocol framework
-- `uvicorn` - ASGI server for running the application
-
 ## Setup
 
 ### 1. Data Directory Structure
